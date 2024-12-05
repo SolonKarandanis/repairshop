@@ -17,12 +17,15 @@ import { Button } from "@/components/ui/button"
 import { useAction } from 'next-safe-action/hooks'
 import { saveCustomerAction } from "@/app/actions/saveCustomerAction"
 import { LoaderCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { DisplayServerActionResponse } from "@/app/components/DisplayServerActionResponse"
 
 type Props = {
     customer?: selectCustomerSchemaType,
 }
 
 export default function CustomerForm({ customer }: Props){
+    const { toast } = useToast();
 
     const defaultValues: insertCustomerSchemaType = {
         id: customer?.id ?? 0,
@@ -52,19 +55,19 @@ export default function CustomerForm({ customer }: Props){
     } = useAction(saveCustomerAction, {
         onSuccess({ data }) {
             if (data?.message) {
-                // toast({
-                //     variant: "default",
-                //     title: "Success! 🎉",
-                //     description: data.message,
-                // })
+                toast({
+                    variant: "default",
+                    title: "Success! 🎉",
+                    description: data.message,
+                })
             }
         },
-        onError({ error }) {
-            // toast({
-            //     variant: "destructive",
-            //     title: "Error",
-            //     description: "Save Failed",
-            // })
+        onError({  }) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Save Failed",
+            })
         }
     })
 
@@ -74,6 +77,7 @@ export default function CustomerForm({ customer }: Props){
 
     return (
         <div className="flex flex-col gap-1 sm:px-8">
+            <DisplayServerActionResponse result={saveResult} />
             <div>
                 <h2 className="text-2xl font-bold">
                     {customer?.id ? "Edit" : "New"} Customer Form
@@ -130,7 +134,7 @@ export default function CustomerForm({ customer }: Props){
                             fieldTitle="Notes"
                             nameInSchema="notes"
                             className="h-40"
-                        />resetSaveAction()
+                        />
                         <div className="flex gap-2">
                             <Button
                                 type="submit"
@@ -150,7 +154,7 @@ export default function CustomerForm({ customer }: Props){
                                 type="button"
                                 variant="destructive"
                                 title="Reset"
-                                onClick={() =>{
+                                onClick={() => {
                                     form.reset(defaultValues)
                                     resetSaveAction()
                                 }}
