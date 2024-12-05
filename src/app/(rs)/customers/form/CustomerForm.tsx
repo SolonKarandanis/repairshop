@@ -14,6 +14,9 @@ import { SelectWithLabel } from "@/app/components/inputs/SelectWithLabel"
 import { StatesArray } from "@/constants/StatesArray"
 import { TextAreaWithLabel } from "@/app/components/inputs/TextAreaWithLabel"
 import { Button } from "@/components/ui/button"
+import { useAction } from 'next-safe-action/hooks'
+import { saveCustomerAction } from "@/app/actions/saveCustomerAction"
+import { LoaderCircle } from "lucide-react"
 
 type Props = {
     customer?: selectCustomerSchemaType,
@@ -41,8 +44,32 @@ export default function CustomerForm({ customer }: Props){
         defaultValues,
     })
 
+    const {
+        execute: executeSave,
+        result: saveResult,
+        isPending: isSaving,
+        reset: resetSaveAction,
+    } = useAction(saveCustomerAction, {
+        onSuccess({ data }) {
+            if (data?.message) {
+                // toast({
+                //     variant: "default",
+                //     title: "Success! 🎉",
+                //     description: data.message,
+                // })
+            }
+        },
+        onError({ error }) {
+            // toast({
+            //     variant: "destructive",
+            //     title: "Error",
+            //     description: "Save Failed",
+            // })
+        }
+    })
+
     async function submitForm(data: insertCustomerSchemaType) {
-        console.log(data)
+        executeSave(data)
     }
 
     return (
@@ -110,15 +137,23 @@ export default function CustomerForm({ customer }: Props){
                                 className="w-3/4"
                                 variant="default"
                                 title="Save"
+                                disabled={isSaving}
                             >
-                                Save
+                                {isSaving ? (
+                                    <>
+                                        <LoaderCircle className="animate-spin" /> Saving
+                                    </>
+                                ) : "Save"}
                             </Button>
 
                             <Button
                                 type="button"
                                 variant="destructive"
                                 title="Reset"
-                                onClick={() => form.reset(defaultValues)}
+                                onClick={() =>{
+                                    form.reset(defaultValues)
+                                    resetSaveAction()
+                                }}
                             >
                                 Reset
                             </Button>
