@@ -130,7 +130,7 @@ export default function CustomerForm({ customer }: Props){
                             fieldTitle="Notes"
                             nameInSchema="notes"
                             className="h-40"
-                        />
+                        />resetSaveAction()
                         <div className="flex gap-2">
                             <Button
                                 type="submit"
