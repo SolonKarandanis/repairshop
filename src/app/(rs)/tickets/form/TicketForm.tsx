@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "@/components/ui/form"
-// import { Button } from "@/components/ui/button"
 
 import { 
     insertTicketSchema, 
@@ -15,15 +14,27 @@ import { InputWithLabel } from "@/app/components/inputs/InputWithLabel"
 import { CheckboxWithLabel } from "@/app/components/inputs/CheckboxWithLabel"
 import { TextAreaWithLabel } from "@/app/components/inputs/TextAreaWithLabel"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { useAction } from "next-safe-action/hooks"
+import { saveTicketAction } from "@/app/actions/saveTicketAction"
+import { DisplayServerActionResponse } from "@/app/components/DisplayServerActionResponse"
+import { LoaderCircle } from "lucide-react"
 
 type Props = {
     customer: selectCustomerSchemaType,
     ticket?: selectTicketSchemaType,
+    techs?: {
+        id: string,
+        description: string,
+    }[],
+    isEditable?: boolean,
 }
 
 export default function TicketForm({
-    customer, ticket
+    customer, ticket, techs, isEditable = true
 }: Props){
+    const { toast } = useToast()
+
 
     const defaultValues: insertTicketSchemaType = {
         id: ticket?.id ?? "(New)",
@@ -40,17 +51,44 @@ export default function TicketForm({
         defaultValues,
     })
 
+    const {
+        execute: executeSave,
+        result: saveResult,
+        isPending: isSaving,
+        reset: resetSaveAction,
+    } = useAction(saveTicketAction, {
+        onSuccess({ data }) {
+            if (data?.message) {
+                toast({
+                    variant: "default",
+                    title: "Success! 🎉",
+                    description: data.message,
+                })
+            }
+        },
+        onError({  }) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Save Failed",
+            })
+        }
+    })
+
     async function submitForm(data: insertTicketSchemaType) {
-        console.log(data)
+        executeSave(data)
     }
 
     return (
         <div className="flex flex-col gap-1 sm:px-8">
+            <DisplayServerActionResponse result={saveResult} />
             <div>
                 <h2 className="text-2xl font-bold">
-                    {ticket?.id
+                    {ticket?.id && isEditable
                         ? `Edit Ticket # ${ticket.id}`
-                        : "New Ticket Form"
+                        : ticket?.id
+                            ? `View Ticket # ${ticket.id}`
+                            : "New Ticket Form"
                     }
                 </h2>
             </div>
@@ -64,6 +102,7 @@ export default function TicketForm({
                         <InputWithLabel<insertTicketSchemaType>
                             fieldTitle="Title"
                             nameInSchema="title"
+                            disabled={!isEditable}
                         />
 
                         <InputWithLabel<insertTicketSchemaType>
@@ -72,11 +111,14 @@ export default function TicketForm({
                             disabled={true}
                         />
 
-                        <CheckboxWithLabel<insertTicketSchemaType>
-                            fieldTitle="Completed"
-                            nameInSchema="completed"
-                            message="Yes"
-                        />
+                        {ticket?.id ? (
+                            <CheckboxWithLabel<insertTicketSchemaType>
+                                fieldTitle="Completed"
+                                nameInSchema="completed"
+                                message="Yes"
+                                disabled={!isEditable}
+                            />
+                        ) : null}
 
                         <div className="mt-4 space-y-2">
                             <h3 className="text-lg">Customer Info</h3>
@@ -95,26 +137,37 @@ export default function TicketForm({
                             fieldTitle="Description"
                             nameInSchema="description"
                             className="h-96"
+                            disabled={!isEditable}
                         />
-                        <div className="flex gap-2">
-                            <Button
-                                type="submit"
-                                className="w-3/4"
-                                variant="default"
-                                title="Save"
-                            >
-                                Save
-                            </Button>
+                        {isEditable ? (
+                            <div className="flex gap-2">
+                                <Button
+                                    type="submit"
+                                    className="w-3/4"
+                                    variant="default"
+                                    title="Save"
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <LoaderCircle className="animate-spin" /> Saving
+                                        </>
+                                    ) : "Save"}
+                                </Button>
 
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                title="Reset"
-                                onClick={() => form.reset(defaultValues)}
-                            >
-                                Reset
-                            </Button>
-                        </div>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    title="Reset"
+                                    onClick={() => {
+                                        form.reset(defaultValues)
+                                        resetSaveAction()
+                                    }}
+                                >
+                                    Reset
+                                </Button>
+                            </div>
+                        ) : null}
                     </div>
 
                 </form>
