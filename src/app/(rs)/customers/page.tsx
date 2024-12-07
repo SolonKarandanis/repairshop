@@ -1,3 +1,4 @@
+import { getCustomerSearchResults } from "@/lib/queries/getCustomerSearchResults"
 import CustomerSearch from "./CustomerSearch"
 
 
@@ -14,8 +15,13 @@ const CustomersPage = async ({
 
   if (!searchText) return <CustomerSearch />
 
+  const results = await getCustomerSearchResults(searchText)
+
   return (
-    <div>CustomersPage</div>
+      <>
+          <CustomerSearch />
+          <p>{JSON.stringify(results)}</p>
+      </>
   )
 }
 
