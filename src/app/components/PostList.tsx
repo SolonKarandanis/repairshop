@@ -30,11 +30,23 @@ export default function PostList({ initialPosts }: PostListProps){
 
     return (
         <>
-          <div className="...">
-            {posts?.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+            <div className="...">
+                {posts?.map((post) => (
+                <PostCard key={post.id} post={post} />
+                ))}
+            </div>
+            <div className="...">
+                {hasMoreData ? (
+                <button
+                    className="..."
+                    onClick={loadMorePosts}
+                >
+                    Load More Posts
+                </button>
+                ) : (
+                    <p className="...">No more posts to load</p>
+                )}
+            </div>
         </>
     );
 }
