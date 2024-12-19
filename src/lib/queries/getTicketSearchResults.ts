@@ -27,4 +27,6 @@ export async function getTicketSearchResults(searchText: string) {
         .orderBy(asc(tickets.createdAt))
 
     return results
-}   
+}
+
+export type TicketSearchResultsType = Awaited<ReturnType<typeof getTicketSearchResults>>
