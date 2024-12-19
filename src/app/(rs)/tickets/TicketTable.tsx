@@ -1,5 +1,6 @@
 "use client"
 
+import Filter from "@/app/components/react-table/Filter"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TicketSearchResultsType } from "@/lib/queries/getTicketSearchResults"
@@ -134,7 +135,7 @@ export default function TicketTable({ data }: Props) {
                                         </div>
                                         {header.column.getCanFilter() ? (
                                             <div className="grid place-content-center">
-                                                {/* <Filter column={header.column} /> */}
+                                                <Filter column={header.column} />
                                             </div>
                                         ) : null}
                                     </TableHead>
