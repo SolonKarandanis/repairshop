@@ -3,11 +3,23 @@
 import Filter from "@/app/components/react-table/Filter"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { usePolling } from "@/hooks/usePolling"
 import { TicketSearchResultsType } from "@/lib/queries/getTicketSearchResults"
-import { ColumnFiltersState, createColumnHelper, flexRender, getCoreRowModel, getFacetedUniqueValues, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable } from "@tanstack/react-table"
+import { 
+    ColumnFiltersState, 
+    createColumnHelper, 
+    flexRender, 
+    getCoreRowModel, 
+    getFacetedUniqueValues, 
+    getFilteredRowModel, 
+    getPaginationRowModel, 
+    getSortedRowModel, 
+    SortingState, 
+    useReactTable 
+} from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ArrowUpDown, CircleCheckIcon, CircleXIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useMemo, useState } from "react"
 
 type Props = {
     data: TicketSearchResultsType,
@@ -18,6 +30,8 @@ type RowType = TicketSearchResultsType[0]
 export default function TicketTable({ data }: Props) {
     const router = useRouter()
 
+    const searchParams = useSearchParams()
+
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
     const [sorting, setSorting] = useState<SortingState>([
@@ -26,6 +40,13 @@ export default function TicketTable({ data }: Props) {
             desc: false, // false for ascending 
         }
     ])
+
+    usePolling(searchParams.get("searchText"), 300000)
+
+    const pageIndex = useMemo(() => {
+        const page = searchParams.get("page")
+        return page ? parseInt(page) - 1 : 0
+    }, [searchParams.get("page")])
 
     const columnHeadersArray: Array<keyof RowType> = [
         "ticketDate",
@@ -101,9 +122,8 @@ export default function TicketTable({ data }: Props) {
         state: {
             sorting,
             columnFilters,
-        },
-        initialState: {
             pagination: {
+                pageIndex,
                 pageSize: 10,
             },
         },
@@ -186,14 +206,26 @@ export default function TicketTable({ data }: Props) {
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={() => table.previousPage()}
+                        onClick={() => {
+                            const newIndex = table.getState().pagination.pageIndex - 1
+                            table.setPageIndex(newIndex)
+                            const params = new URLSearchParams(searchParams.toString())
+                            params.set("page", (newIndex + 1).toString())
+                            router.replace(`?${params.toString()}`, { scroll: false })
+                        }}
                         disabled={!table.getCanPreviousPage()}
                     >
                         Previous
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={() => table.nextPage()}
+                        onClick={() => {
+                            const newIndex = table.getState().pagination.pageIndex + 1
+                            table.setPageIndex(newIndex)
+                            const params = new URLSearchParams(searchParams.toString())
+                            params.set("page", (newIndex + 1).toString())
+                            router.replace(`?${params.toString()}`, { scroll: false })
+                        }}
                         disabled={!table.getCanNextPage()}
                     >
                         Next
